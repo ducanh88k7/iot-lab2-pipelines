@@ -18,6 +18,7 @@ ESP32 (Wokwi) ──MQTT──► ThingsBoard Cloud ──REST API──► Goog
 |---|---|
 | `firmware/esp32_wokwi/` | `sketch.ino`, `diagram.json`, `libraries.txt` — mạch và chương trình ESP32 của bài 1 |
 | `notebooks/IoT_Bai2_ThuThap_TienXuLy.ipynb` | Notebook Colab: thu thập, kiểm tra, tiền xử lý, lưu InfluxDB, dashboard, đo độ trễ |
+| `app/streamlit_app.py`, `app/requirements.txt` | App giám sát real-time (Streamlit) |
 | `config.json` | Các tham số dùng trong notebook (không chứa khóa bí mật) |
 | `data/iot_telemetry_processed.csv` | 337 mẫu sau tiền xử lý (11 cột) |
 | `data/latency_results.csv` | 10 lần đo thời gian truy vấn REST API |
@@ -43,6 +44,27 @@ ESP32 (Wokwi) ──MQTT──► ThingsBoard Cloud ──REST API──► Goog
 3. Tạo API key: ThingsBoard → *Account → Security → API keys → Generate*.
 4. *Runtime → Run all*, nhập API key khi được hỏi (dùng `getpass`, không hiện ra màn hình).
 5. Mục 7 (InfluxDB): đăng ký miễn phí tại https://cloud2.influxdata.com, bucket đầu tiên đặt tên `iot_raw`, tạo thêm `iot_processed`; sửa `INFLUX_URL`, `INFLUX_ORG`, nhập token khi được hỏi.
+
+### 3. App ứng dụng (Streamlit Community Cloud)
+`app/streamlit_app.py` đọc telemetry trực tiếp từ ThingsBoard qua REST API:
+- trạng thái thiết bị (đang gửi / ngừng gửi) và các giá trị mới nhất;
+- cảnh báo vật cản gần, Wi-Fi yếu, giá trị ngoài miền đo 2–400 cm;
+- biểu đồ khoảng cách (thô + trung bình trượt 3 mẫu) và RSSI, tự làm mới mỗi 5 s;
+- chất lượng dữ liệu: số mẫu, mất bản tin theo `sequence`, khởi động lại theo `uptime_s`, chu kỳ gửi;
+- bảng sự kiện bất thường và nút tải CSV dữ liệu đã tiền xử lý.
+
+Deploy (chỉ cần trình duyệt):
+1. https://share.streamlit.io → đăng nhập bằng GitHub → **Create app → Deploy a public app from GitHub**.
+2. Repository `tmk-123/iot-lab2-pipeline`, Branch `main`, Main file path `app/streamlit_app.py`.
+3. **Advanced settings → Secrets**, dán (thay bằng giá trị của bạn):
+   ```toml
+   THINGSBOARD_URL = "https://thingsboard.cloud"
+   TB_API_KEY = "API key ThingsBoard"
+   DEVICE_ID = "ID thiết bị ThingsBoard"
+   ```
+4. **Deploy**. App có link dạng `https://<tên>.streamlit.app`.
+
+Chạy thử trên máy (tùy chọn): `pip install -r app/requirements.txt`, tạo `.streamlit/secrets.toml` như trên, rồi `streamlit run app/streamlit_app.py`.
 
 ## Dữ liệu
 
